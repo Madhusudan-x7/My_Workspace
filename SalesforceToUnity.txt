@@ -1,0 +1,73 @@
+--New Lookup
+
+SELECT cts.*,lsc.UCSchemaPrefix, utc.UnityCatalogName, utc.StorageAccountName
+from etl.ControlTableSourceToAdlsLoad cts 
+inner join etl.LinkedServiceConnectionStore lsc on cts.SourceDatabaseName = lsc.DatabaseName
+inner join etl.UnityCatalogConnectionStore utc on cts.UCFlagFlag = utc.IsActiveFlag
+where cts.SourceType = 'Salesforce'
+and cts.SourceType = lsc.DatabaseType
+and cts.IsActiveFlag = 'Y'
+and (PipelineTriggerName = '@{pipeline().parameters.pTriggerName}')
+
+
+--Original lookup
+
+SELECT PipeLineTriggerName,
+SourceTableName,
+SourceKeyColumnList,
+SourceDatabaseName,
+IsActiveFlag,
+SourceExtractSQL,
+HistoricalDataLoadStartDate,
+DeltaUpdateWatermarkColumnName,
+DeltaLastWatermarkDateTime,
+SourceExtractMethod,
+PipelineLastRunDateTime,
+AuditSchemaName,
+AuditTableName,
+DataLakeDestinationFolder,
+DataLakeDestinationContainer FROM etl.ControlTableSourceToAdlsLoad 
+WHERE SourceDataBaseName = 'Salesforce'
+	AND IsActiveFlag = 'Y'
+	AND PipelineTriggerName = '@{pipeline().parameters.pTriggerName}'
+	
+	
+--LinkedServiceConnectionStore table Entry For Salesforce
+	
+INSERT INTO etl.LinkedServiceConnectionStore (
+DatabaseName,
+DBFolderName,
+DatabaseType,
+SourceServerName,
+ServerFolderName,
+SourceUserName,
+SourceKeyVaultSecretName,
+Port,
+IsSourceActiveFlag,
+UCSchemaPrefix) VALUES (
+'Salesforce',
+'Salesforce',
+'Salesforce',
+'https://pellacorp--pellaqa.sandbox.my.salesforce.com/',
+'Salesforce',
+'integrationuser@pella.com.pellaqa',
+'SalesforceQAClientSecret',
+'',
+'Y',
+'pel')
+
+
+
+
+select  cts.*, lsc.*, utc.UnityCatalogName, utc.StorageAccountName,
+case when HistoricalDataLoadYearlyFlag = 'Y' 
+	 then convert(varchar,isnull(DeltaLastWatermarkDateTime,DATEADD(yy, DATEDIFF(yy, 0, GETDATE()), 0)),120)
+	 else convert(varchar,isnull(DeltaLastWatermarkDateTime,'1900-01-01'),120) end as FormattedLastWatermarkDateTime 
+from etl.ControlTableSourceToAdlsLoad cts 
+inner join etl.LinkedServiceConnectionStore lsc on cts.SourceDatabaseName = lsc.DatabaseName
+inner join etl.UnityCatalogConnectionStore utc on cts.IsActiveFlag = utc.IsActiveFlag
+where cts.SourceType = 'PellaSQLServer'
+and cts.SourceType = lsc.DatabaseType
+and cts.IsActiveFlag = 'Y'
+and (PipelineTriggerName = '@{pipeline().parameters.PipelineTriggerName}'
+or PipelineTriggerName IS NULL)

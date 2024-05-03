@@ -1,0 +1,34 @@
+---------------------------------------------------------------------------------
+
+--Delta Logic
+SELECT * FROM @{item().SourceSchemaName}.@{item().SourceTableName} 
+WHERE (@{item().DeltaUpdateWatermarkColumnName} IS NOT NULL 
+AND @{item().DeltaUpdateWatermarkColumnName} >= 
+CAST('@{item().FormattedLastWatermarkDateTime}' as date)
+AND @{item().DeltaUpdateWatermarkColumnName} <= 
+CAST('@{variables('varCurrentDateTimeCST')}' as datetime2(0)));
+
+SELECT * FROM dbo.Quotes 
+WHERE (QuoteLastModified IS NOT NULL 
+AND QuoteLastModified >= CAST('2023-12-26 08:00:18' as date)
+AND QuoteLastModified <= CAST('2023-12-27 08:00:09' as datetime2(0)))
+
+----------------------------------------------------------------------------------
+
+--SQL Logic
+@{item().SourceExtractSQL}
+WHERE (@{item().DeltaUpdateWatermarkColumnName} IS NOT NULL 
+AND @{item().DeltaUpdateWatermarkColumnName} >= 
+CAST('@{item().FormattedLastWatermarkDateTime}' as date) 
+AND @{item().DeltaUpdateWatermarkColumnName} <= 
+CAST ('@{variables('varCurrentDateTimeCST')}' as datetime2(0)));
+
+
+SELECT *FROM (SELECT i.*,ISNULL(q.lastserverupdate, q.QuoteLastModified) AS QuotesQuoteLastModified FROM dbo.Quotes AS q 
+INNER JOIN dbo.LineItemMaster m ON q.QuoteID = m.QuoteID
+INNER JOIN dbo.LineItems i ON i.LineItemMasterID = m.LineItemMasterID) t1
+WHERE (QuotesQuoteLastModified IS NOT NULL 
+AND QuotesQuoteLastModified >= CAST('2023-12-26 08:00:18' AS DATE)
+AND QuotesQuoteLastModified <= CAST('2023-12-27 08:00:09' AS DATETIME)
+);
+-----------------------------------------------------------------------------------

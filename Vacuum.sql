@@ -1,0 +1,13 @@
+%sql
+
+Optimize silver_test.demo
+
+select * from silver_test.demo
+
+update silver_test.demo set Name = 'ABCD'
+
+DESCRIBE history silver_test.demo
+
+VACUUM silver_test.demo DRY RUN --(dry run will list files which will be deleted)
+
+VACUUM silver_test.demo

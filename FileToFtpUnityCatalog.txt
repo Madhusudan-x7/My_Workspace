@@ -1,0 +1,128 @@
+@{activity('QueryControlTable').output.value[0].AdlsBasePath}@
+{pipeline().parameters.pTriggerName}/@
+{formatDateTime(convertTimeZone(utcnow(),'UTC','Central Standard Time'),
+'yyyy/MM/dd_HH_mm')}/
+
+
+
+GetMetaDataQuery
+@substring(variables('vGeneratedFilePath'), 12, sub(length(variables('vGeneratedFilePath')), 12))
+@substring(variables('vGeneratedFilePath'), 12, sub(length(variables('vGeneratedFilePath')), 12))
+
+
+@concat('/Volumes/', variables('vInstanceName'), '_gold/', activity('QueryControlTable')
+.output.value[0].AdlsBasePath, pipeline().parameters.pTriggerName, '/', 
+formatDateTime(convertTimeZone(utcnow(), 'UTC', 'Central Standard Time'),
+ 'yyyy/MM/dd_HH_mm'), '/')
+
+
+
+
+select * from [etl].[ControlTableFileToFTP] where TriggerName in ('trgVaricentSfForecastQt','trgVaricentHcmEmpVarUpload','trgVaricentOmsReports','trgVaricentDtProLowes','trgVaricentSalesforceR90GrossClose');
+
+select * from [etl].[ControlTableFileToFTP] where TriggerName = 'trgVaricentSalesforceR90GrossClose';
+select * from [etl].[ControlTableFileToFTP] where connectiondetailsID = 1;
+
+select * from etl.FileToFTPConnectionDetails
+
+
+update [etl].[ControlTableFileToFTP] set AdlsBasePath = 'ftp/varicent/' where TriggerName = 'trgVaricentHcmEmpVarUpload';
+update [etl].[ControlTableFileToFTP] set AdlsBasePath = 'ftp/varicent/' where TriggerName = 'trgVaricentDtProLowes';
+update [etl].[ControlTableFileToFTP] set AdlsBasePath = 'ftp/varicent/' where TriggerName = 'trgVaricentSfForecastQt';
+update [etl].[ControlTableFileToFTP] set AdlsBasePath = 'ftp/varicent/' where TriggerName = 'trgVaricentOmsReports';
+update [etl].[ControlTableFileToFTP] set AdlsBasePath = 'ftp/varicent/' where TriggerName = 'trgVaricentSalesforceR90Close';
+
+--Copy Activity Path: /ftp/varicent/output/trgHcmEmpVarUpload/2023/09/07_03_13/HcmPayees.csv
+--Volumes Path: /Volumes/dev_gold/adls/ftp_varicent/output/trgHcmEmpVarUpload/2023/09/08_03_46/HcmPayees.csv
+
+update [etl].[ControlTableFileToFTP] set NotebookPath = '/Repos/shakyas@pella.com/Pella-DataBricks-Dev-FileToFTP-Unity-Sandeep/notebooks/Transfer File To FTP Notebooks/Varicent/HCM Payees Files' where TriggerName = 'trgVaricentHcmEmpVarUpload';
+update [etl].[ControlTableFileToFTP] set NotebookPath = '/Repos/shakyas@pella.com/Pella-DataBricks-Dev-FileToFTP-Unity-Sandeep/notebooks/Transfer File To FTP Notebooks/Varicent/Varicent dtProLowesDataFeed' where TriggerName = 'trgVaricentDtProLowes';
+update [etl].[ControlTableFileToFTP] set NotebookPath = '/Repos/shakyas@pella.com/Pella-DataBricks-Dev-FileToFTP-Unity-Sandeep/notebooks/Transfer File To FTP Notebooks/Varicent/Salesforce Forecasted Quotes Report' where TriggerName = 'trgVaricentSfForecastQt';
+update [etl].[ControlTableFileToFTP] set NotebookPath = '/Repos/shakyas@pella.com/Pella-DataBricks-Dev-FileToFTP-Unity-Sandeep/notebooks/Transfer File To FTP Notebooks/Varicent/OMS Report Generator' where TriggerName = 'trgVaricentOmsReports';
+update [etl].[ControlTableFileToFTP] set NotebookPath = '/Repos/shakyas@pella.com/Pella-DataBricks-Dev-FileToFTP-Unity-Sandeep/notebooks/Transfer File To FTP Notebooks/Varicent/Varicent SIP R90 Gross Close Ratio for Sales Subs' where TriggerName = 'trgVaricentSalesforceR90Close';
+
+--/mnt/master/ftp/hcm/output/
+--/mnt/master/ftp/varicent/output/
+--/mnt/master/ftp/varicent/output/
+--/mnt/master/ftp/OMS/output/
+--/mnt/master/ftp/varicent/output/
+
+
+
+--/Transfer File To FTP Notebooks/Varicent/HCM Payees Files
+--/Transfer File To FTP Notebooks/Varicent dtProLowesDataFeed
+--/Transfer File To FTP Notebooks/Salesforce Forecasted Quote Report
+--/Transfer File To FTP Notebooks/OMS Report Generator
+--/Transfer File To FTP Notebooks/Varicent/Varicent SIP R90 Gross Close Ratio for Sales Subs
+
+========================================================================================================================
+select * from [etl].[FileToFTPConnectionDetails]
+
+alter table [etl].[FileToFTPConnectionDetails] add VolumeName varchar(50);
+alter table [etl].[FileToFTPConnectionDetails] add VolumePath varchar(100);
+
+update [etl].[FileToFTPConnectionDetails] set VolumeName = 'ftp_varicent' where ConnectionDetailsId = '1';
+update [etl].[FileToFTPConnectionDetails] set VolumePath = '/Volumes/dev_gold/adls/	' where ConnectionDetailsId = '1';
+
+========================================================================================================================
+CREATE TABLE IF NOT EXISTS prod_gold.pel_oms.shippingreport LIKE hive_metastore.oms.omsshippingreport COPY LOCATION;
+CREATE TABLE IF NOT EXISTS prod_gold.pel_oms.bookingreport LIKE hive_metastore.oms.omsbookingreport COPY LOCATION;
+CREATE TABLE IF NOT EXISTS prod_gold.pel_oms.serviceaccount LIKE hive_metastore.oms_silver.omsserviceaccount COPY LOCATION;
+
+CREATE TABLE IF NOT EXISTS prod_silver.pel_salesforce.r90_gross_close_ratio_sales_subs LIKE hive_metastore.silver.salesforce_r90_gross_close_ratio_sales_subs COPY LOCATION;
+CREATE TABLE IF NOT EXISTS prod_gold.pel_salesforce.forecasted_quotes_report LIKE hive_metastore.gold.salesforce_forecasted_quote_report COPY LOCATION;
+
+
+--Update Columns
+update [etl].[FileToFTPConnectionDetails] 
+set VolumeName = 'ftp_highradius'
+where ConnectionDetailsId = 3;
+
+update [etl].[FileToFTPConnectionDetails] 
+set VolumePath = '/Volumes/dev_gold/adls/'
+where ConnectionDetailsId = 3;
+
+update [etl].[FileToFTPConnectionDetails] 
+set AdlsBasePath = 'ftp/highradius/'
+where ConnectionDetailsId = 3;
+
+update [etl].[ControlTableFileToFTP] 
+set NotebookPath= '/Transfer File To FTP Notebooks/Varicent/Varicent dtProLowesDataFeed' 
+where TriggerName = 'trgVaricentDtProLowes';
+
+update [etl].[ControlTableFileToFTP] set NotebookPath = '/Repos/shakyas@pella.com/Pella-DataBricks-HighRadius-Sandeep/notebooks/Transfer File To FTP Notebooks/Varicent/HighRadius Shipment Extract' where TriggerName = 'trgHighRadiusShipment';
+
+
+select * from [etl].[ControlTableFileToFTP] where TriggerName in ('trgVaricentDtProLowes','trgVaricentHcmEmpVarUpload','trgVaricentSfForecastQt','trgVaricentOmsReports','trgVaricentSalesforceR90Close');
+
+select * from [etl].[FileToFTPConnectionDetails]
+
+select * from [etl].[ControlTableFileToFTP] where TriggerName = 'trgVaricentDtProLowes';
+
+
+--update etl.ControlTableFileToFTP set FTPDirectoryPath = 'Data' where OutputFilePath = 'test_path'
+
+select * from [etl].[ControlTableFileToFTP] where TriggerName in ('trgHighRadiusShipment','trgVaricentDtProLowes','trgVaricentHcmEmpVarUpload','trgVaricentSfForecastQt','trgVaricentOmsReports','trgVaricentSalesforceR90Close');
+
+select * from [etl].[FileToFTPConnectionDetails]
+
+select * from [etl].[ControlTableFileToFTP] where TriggerName = 'trgVaricentDtProLowes';
+
+
+--update etl.ControlTableFileToFTP set FTPDirectoryPath = 'Data' where OutputFilePath = 'test_path'
+--update etl.ControlTableFileToFTP set PipelineLastRunDateTime = '2023-09-26T11:59:07.000' where OutputFilePath = 'test_path'
+--update etl.ControlTableFileToFTP set NotebookPath = '/Repos/shakyas@pella.com/Pella-DataBricks-HighRadius-Sandeep/notebooks/Transfer File To FTP Notebooks/HighRadius Shipment Extract Unity' where TriggerName = 'trgHighRadiusShipment'
+--update etl.ControlTableFileToFTP set FTPDirectoryPath = 'Data' where TriggerName = 'trgHighRadiusShipment'
+
+
+UPDATE etl.ControlTableFileToFTP SET PipelineLastRunDateTime = '@{variables('vCurrentDateTime')}' WHERE TriggerName = '@{pipeline().parameters.pTriggerName}';
+
+UPDATE etl.ControlTableFileToFTP
+SET PipelineLastRunDateTime = '@{formatDateTime(variables('vCurrentDateTime'),'yyyy-MM-dd HH:mm:ss')}'
+WHERE TriggerName = '@{pipeline().parameters.pTriggerName}';
+
+
+Note:
+Removed dsFileName parameter from dsSFTPPellaDelimited dataset.
+using * in copy activity for all the files instead of @item.name
+
